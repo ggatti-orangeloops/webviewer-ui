@@ -12,6 +12,7 @@ import useOnFormFieldAnnotationAddedOrSelected from '../../hooks/useOnFormFieldA
 import DataElementWrapper from '../DataElementWrapper';
 import useMedia from '../../hooks/useMedia';
 import './FormFieldEditPopup.scss';
+import getFormFieldCreationManager from 'src/core/getFormFieldCreationManager';
 
 function FormFieldEditPopupContainer() {
   const formFieldCreationManager = core.getFormFieldCreationManager();
@@ -31,9 +32,9 @@ function FormFieldEditPopupContainer() {
   const [isOpen] = useSelector((state) => [selectors.isElementOpen(state, 'formFieldEditPopup')], shallowEqual);
   const dispatch = useDispatch();
 
-  useOnClickOutside(popupRef, () => {
-    closeAndReset();
-  });
+  // useOnClickOutside(popupRef, () => {
+  //   closeAndReset();
+  // });
 
   function closeAndReset() {
     dispatch(actions.closeElement('formFieldEditPopup'));
@@ -44,6 +45,7 @@ function FormFieldEditPopupContainer() {
     setIsRequired(false);
     setIsMultiSelect(false);
     setIsValid(true);
+    getFormFieldCreationManager().applyFormFields();
   }
 
   const formFieldAnnotation = useOnFormFieldAnnotationAddedOrSelected(openFormFieldPopup);
@@ -195,10 +197,7 @@ function FormFieldEditPopupContainer() {
     }
   };
 
-  const textFields = [
-    fields['NAME'],
-    fields['VALUE'],
-  ];
+  const textFields = [fields['RADIO_GROUP']];
 
   const defaultFields = [
     fields['NAME'],
@@ -273,19 +272,25 @@ function FormFieldEditPopupContainer() {
     flags['REQUIRED'],
   ];
 
-  const renderTextFormFieldEditPopup = () => (
-    <FormFieldEditPopup
-      fields={textFields}
-      flags={textFieldFlags}
-      closeFormFieldEditPopup={closeFormFieldEditPopup}
-      isValid={isValid}
-      validationMessage={validationMessage}
-      annotation={formFieldAnnotation}
-      redrawAnnotation={redrawAnnotation}
-      getPageHeight={getPageHeight}
-      getPageWidth={getPageWidth}
-    />
-  );
+  const renderTextFormFieldEditPopup = () => {
+    formFieldCreationManager.setFieldFlag(formFieldAnnotation, fieldLabels.READ_ONLY, true);
+    formFieldCreationManager.setFieldFlag(formFieldAnnotation, fieldLabels.MULTI_LINE, true);
+
+    return (
+      <FormFieldEditPopup
+        fields={textFields}
+        flags={textFieldFlags}
+        closeFormFieldEditPopup={closeFormFieldEditPopup}
+        isValid={isValid}
+        validationMessage={validationMessage}
+        annotation={formFieldAnnotation}
+        redrawAnnotation={redrawAnnotation}
+        getPageHeight={getPageHeight}
+        getPageWidth={getPageWidth}
+        name={formFieldCreationManager.getFieldName(formFieldAnnotation) ? formFieldCreationManager.getFieldName(formFieldAnnotation) : ''}
+      />
+    );
+  };
 
   const renderSignatureFormFieldEditPopup = () => (
     <FormFieldEditPopup

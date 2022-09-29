@@ -2,12 +2,66 @@ import React, { useState, useEffect } from 'react';
 import classNames from 'classnames';
 import Button from '../Button';
 import { useTranslation } from 'react-i18next';
-import { Choice, Input } from '@pdftron/webviewer-react-toolkit';
+import { Input } from '@pdftron/webviewer-react-toolkit';
 import CreatableDropdown from '../CreatableDropdown';
 
 
 import './FormFieldEditPopup.scss';
 import CreatableList from '../CreatableList';
+import getAnnotationManager from 'src/core/getAnnotationManager';
+
+const availableFields = [
+  'Balance Due At Closing',
+  'Buyer Address 1',
+  'Buyer Address 2',
+  'Buyer Address 3',
+  'Buyer Address 4',
+  'Buyer Name 1',
+  'Buyer Name 2',
+  'Buyer Name 3',
+  'Buyer Name 4',
+  'Buyer Signature 1',
+  'Buyer Signature 2',
+  'Buyer Signature 3',
+  'Buyer Signature 4',
+  'Buyer\'s Agent Name',
+  'Closing Date Time',
+  'Closing Date',
+  'Earnest Money Deposit',
+  'Escrow Agent',
+  'Fixed Dollar Figure',
+  'Fixed Number',
+  'Fixed Percentage',
+  'Inspection Deadline Date',
+  'Mortgage Amount',
+  'Mortgage Application Date',
+  'Mortgage Approval Date',
+  'Offer Deadline Date',
+  'Offer Deadline Time',
+  'Offer Deposit',
+  'P&S Deadline Date',
+  'P&S Deadline Time',
+  'Property Address',
+  'Purchase Price',
+  'Seller Address 1',
+  'Seller Address 2',
+  'Seller Address 3',
+  'Seller Address 4',
+  'Seller Name 1',
+  'Seller Name 2',
+  'Seller Name 3',
+  'Seller Name 4',
+  'Seller Signature 1',
+  'Seller Signature 2',
+  'Seller Signature 3',
+  'Seller Signature 4',
+  'Seller\'s Agent Name',
+];
+
+const boldFields = [
+  'Buyer Address 2',
+  'Buyer Address 4',
+];
 
 const FormFieldEditPopup = ({
   fields,
@@ -23,6 +77,7 @@ const FormFieldEditPopup = ({
   getPageHeight,
   getPageWidth,
   redrawAnnotation,
+  name
 }) => {
   const { t } = useTranslation();
   const className = classNames({
@@ -74,21 +129,21 @@ const FormFieldEditPopup = ({
   }
 
   function validateWidth(width) {
-    const documentWidth = getPageWidth();
-    const maxWidth = documentWidth - annotation.X;
-    if (width > maxWidth) {
-      return maxWidth;
-    }
-    return width;
+    // const documentWidth = getPageWidth();
+    // const maxWidth = documentWidth - annotation.X;
+    // if (width > maxWidth) {
+    //   return maxWidth;
+    // }
+    // return width;
   }
 
   function validateHeight(height) {
-    const documentHeight = getPageHeight();
-    const maxHeight = documentHeight - annotation.Y;
-    if (height > maxHeight) {
-      return maxHeight;
-    }
-    return height;
+    // const documentHeight = getPageHeight();
+    // const maxHeight = documentHeight - annotation.Y;
+    // if (height > maxHeight) {
+    //   return maxHeight;
+    // }
+    // return height;
   }
 
   function onCancel() {
@@ -125,18 +180,60 @@ const FormFieldEditPopup = ({
   }
 
   function renderSelectInput(field) {
-    const displayRadioGroups = radioButtonGroups.map((group) => ({ value: group, label: group }));
+    const fields = [];
+    const fieldManager = getAnnotationManager().getFieldManager();
+    fieldManager.forEachField((field) => fields.push(field.name));
+
+    let displayOptions = availableFields.map((group) => ({ value: group, label: group }));
+    displayOptions.forEach((option, index) => {
+      const optionStr = `${option.value} #1`;
+      displayOptions[index] = { value: optionStr, label: option.value };
+    });
+
+    try {
+      fields.forEach((option) => {
+        const optionSplit = option.split('#');
+        const optionStr = `${optionSplit[0]}#${parseInt(optionSplit[1]) + 1}`;
+        displayOptions.push({ value: optionStr, label: optionSplit[0] });
+      });
+
+      displayOptions.sort((a, b) => (a.value > b.value ? 1 : b.value > a.value ? -1 : 0));
+
+      if (!isValid) {
+        let index = 0;
+        try {
+          while (fields.includes(displayOptions[index].value) && index < displayOptions.length) {
+            index++;
+          }
+          setTimeout(() => field.onChange(displayOptions[0].value), 300);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      if (displayOptions.filter((i) => i.value === name).length === 0) {
+        field.onChange(displayOptions[0].value);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      displayOptions = displayOptions.filter((option) => {
+        return !fields.includes(option.value);
+      });
+    }
     return (
       <>
         <CreatableDropdown
           textPlaceholder={t('formField.formFieldPopup.fieldName')}
-          options={displayRadioGroups}
+          options={displayOptions}
           onChange={(inputValue) => onSelectInputChange(field, inputValue)}
           value={radioButtonGroup}
           isValid={isValid}
           messageText={t(validationMessage)}
+          name={name}
+          boldFields = {boldFields}
         />
-        <div className="radio-group-label">{t('formField.formFieldPopup.radioGroups')}</div>
+        {/* <div className="radio-group-label">{t('formField.formFieldPopup.radioGroups')}</div> */}
       </>);
   }
 
@@ -157,15 +254,13 @@ const FormFieldEditPopup = ({
       <div className="fields-container">
         {fields.map((field) => (
           <div className="field-input" key={field.label}>
-            <label>
-              {t(field.label)}{field.required ? '*' : ''}:
-            </label>
+            <label>{t(field.label)}:</label>
             {renderInput(field)}
           </div>
         ))}
       </div>
       {options && renderListOptions()}
-      <div className="field-flags-container">
+      {/* <div className="field-flags-container">
         <span className="field-flags-title">{t('formField.formFieldPopup.flags')}</span>
         {flags.map((flag) => (
           <Choice
@@ -181,7 +276,7 @@ const FormFieldEditPopup = ({
         height={height}
         onWidthChange={onWidthChange}
         onHeightChange={onHeightChange}
-      />
+      /> */}
       <div className="form-buttons-container">
         <Button
           className="cancel-form-field-button"
@@ -201,31 +296,31 @@ const FormFieldEditPopup = ({
   );
 };
 
-const DimensionsInput = ({ width, height, onWidthChange, onHeightChange }) => {
-  const { t } = useTranslation();
+// const DimensionsInput = ({ width, height, onWidthChange, onHeightChange }) => {
+// const { t } = useTranslation();
 
-  return (
-    <div className="form-dimension">
-      <div>{t('formField.formFieldPopup.size')}:</div>
-      <div className="form-dimension-input">
-        <input
-          id="form-field-width"
-          type="number"
-          min={0}
-          value={width}
-          onChange={(e) => onWidthChange(e.target.value)}
-        /> {t('formField.formFieldPopup.width')}
-      </div>
-      <div className="form-dimension-input">
-        <input
-          id="form-field-height"
-          type="number"
-          min={0}
-          value={height}
-          onChange={(e) => onHeightChange(e.target.value)}
-        /> {t('formField.formFieldPopup.height')}
-      </div>
-    </div>
-  );
-};
+// return (
+//   <div className="form-dimension">
+//     <div>{t('formField.formFieldPopup.size')}:</div>
+//     <div className="form-dimension-input">
+//       <input
+//         id="form-field-width"
+//         type="number"
+//         min={0}
+//         value={width}
+//         onChange={(e) => onWidthChange(e.target.value)}
+//       /> {t('formField.formFieldPopup.width')}
+//     </div>
+//     <div className="form-dimension-input">
+//       <input
+//         id="form-field-height"
+//         type="number"
+//         min={0}
+//         value={height}
+//         onChange={(e) => onHeightChange(e.target.value)}
+//       /> {t('formField.formFieldPopup.height')}
+//     </div>
+//   </div>
+// );
+// };
 export default FormFieldEditPopup;
