@@ -58,11 +58,6 @@ const availableFields = [
   'Seller\'s Agent Name',
 ];
 
-const boldFields = [
-  'Buyer Address 2',
-  'Buyer Address 4',
-];
-
 const FormFieldEditPopup = ({
   fields,
   flags,
@@ -231,7 +226,6 @@ const FormFieldEditPopup = ({
           isValid={isValid}
           messageText={t(validationMessage)}
           name={name}
-          boldFields = {boldFields}
         />
         {/* <div className="radio-group-label">{t('formField.formFieldPopup.radioGroups')}</div> */}
       </>);
