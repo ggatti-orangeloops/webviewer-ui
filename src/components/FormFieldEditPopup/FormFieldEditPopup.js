@@ -11,51 +11,14 @@ import CreatableList from '../CreatableList';
 import getAnnotationManager from 'src/core/getAnnotationManager';
 
 const availableFields = [
-  'Balance Due At Closing',
-  'Buyer Address 1',
-  'Buyer Address 2',
-  'Buyer Address 3',
-  'Buyer Address 4',
-  'Buyer Name 1',
-  'Buyer Name 2',
-  'Buyer Name 3',
-  'Buyer Name 4',
   'Buyer Signature 1',
   'Buyer Signature 2',
   'Buyer Signature 3',
   'Buyer Signature 4',
-  'Buyer\'s Agent Name',
-  'Closing Date Time',
-  'Closing Date',
-  'Earnest Money Deposit',
-  'Escrow Agent',
-  'Fixed Dollar Figure',
-  'Fixed Number',
-  'Fixed Percentage',
-  'Inspection Deadline Date',
-  'Mortgage Amount',
-  'Mortgage Application Date',
-  'Mortgage Approval Date',
-  'Offer Deadline Date',
-  'Offer Deadline Time',
-  'Offer Deposit',
-  'P&S Deadline Date',
-  'P&S Deadline Time',
-  'Property Address',
-  'Purchase Price',
-  'Seller Address 1',
-  'Seller Address 2',
-  'Seller Address 3',
-  'Seller Address 4',
-  'Seller Name 1',
-  'Seller Name 2',
-  'Seller Name 3',
-  'Seller Name 4',
   'Seller Signature 1',
   'Seller Signature 2',
   'Seller Signature 3',
   'Seller Signature 4',
-  'Seller\'s Agent Name',
 ];
 
 const FormFieldEditPopup = ({
@@ -189,7 +152,9 @@ const FormFieldEditPopup = ({
       fields.forEach((option) => {
         const optionSplit = option.split('#');
         const optionStr = `${optionSplit[0]}#${parseInt(optionSplit[1]) + 1}`;
-        displayOptions.push({ value: optionStr, label: optionSplit[0] });
+        if (availableFields.includes(optionSplit[0].trim())) {
+          displayOptions.push({ value: optionStr, label: optionSplit[0] });
+        }
       });
 
       displayOptions.sort((a, b) => (a.value > b.value ? 1 : b.value > a.value ? -1 : 0));
